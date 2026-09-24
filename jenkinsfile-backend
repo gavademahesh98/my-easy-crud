@@ -78,5 +78,13 @@ pipeline{
                 }
             }
         }
+        stage('docker-build'){
+            steps{
+                dir('backend'){
+                    sh 'docker build --no-cache -t easy-crud-backend:${BUILD_NUMBER} .'
+                    docker images
+                }
+            }
+        }
     }
 }
