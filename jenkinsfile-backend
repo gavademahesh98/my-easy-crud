@@ -1,0 +1,18 @@
+pipeline{
+    agent{
+        label 'worker1'
+    }
+    tools{
+        maven 'mvn'
+    }
+    environment{
+        aws_cred=credentials('aws-cred')
+    }
+    stages{
+        stage('backend-checkout'){
+            steps{
+                git branch: 'main' , url: "https://github.com/gavademahesh98/my-easy-crud.git"
+            }
+        }
+    }
+}
