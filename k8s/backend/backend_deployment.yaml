@@ -21,7 +21,7 @@ spec:
       spec:
         containers:
           - name: backend-cont
-            image: tomcat:10
+            image: 655887417250.dkr.ecr.ap-southeast-1.amazonaws.com/easy-crud-backend:13
             ports:
               - containerPort: 8080
             imagePullPolicy: Always
