@@ -26,5 +26,50 @@ pipeline{
                 }
             }
         }
+        stage('sonar Analysis'){
+            steps{
+                dir('backend'){
+                    withSonarQubeEnv('sonar-server'){
+                        sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+        stage('Quality-Gate'){
+            steps{
+                timeout(time: 5 , unit: 'MINUTES'){
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+            post {
+                failure {
+                    script {
+
+                        def sonarProperties = readProperties file: 'backend/target/sonar/report-task.txt'
+
+                        def sonarIssuesUrl =
+                            "${sonarProperties.serverUrl}/project/issues?id=${URLEncoder.encode(sonarProperties.projectKey, 'UTF-8')}"
+
+                        emailext(
+                            subject: "SonarQube Quality Gate Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+
+                            body: """
+                                <p>SonarQube Quality Gate failed.</p>
+
+                                <p>
+                                    <a href="${sonarIssuesUrl}">
+                                        <b>View SonarQube Issues Report</b>
+                                    </a>
+                                </p>
+                            """,
+
+                            mimeType: 'text/html',
+
+                            to: 'gavademahesh98@gmail.com'
+                        )
+                    }
+                }
+            }
+        }
     }
 }
