@@ -98,12 +98,22 @@ pipeline{
         }
         stage('backend-image-change'){
             steps{
+                withCredentials([
+                usernamePassword(
+                credentialsId: 'github-push-cred',
+                usernameVariable: 'GIT_USERNAME',
+                passwordVariable: 'GIT_TOKEN'
+                )
+               ]){
+            
                 sh '''
                 sed -i "s|image:.*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/backend/backend_deployment.yaml
                 git add k8s/backend/backend_deployment.yaml
-                git commit -m "changed backend image tag ${ECR_REPO}:${BUILD_NUMBER}"
-                git push origin main
+                git commit -m "changed backend image tag ${ECR_REPO}:${BUILD_NUMBER}" || true 
+                https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/gavademahesh98/my-easy-crud.git HEAD:main
+                
                 '''
+               }
             }
         }
     }
