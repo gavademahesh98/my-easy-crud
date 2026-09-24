@@ -14,5 +14,17 @@ pipeline{
                 git branch: 'main' , url: "https://github.com/gavademahesh98/my-easy-crud.git"
             }
         }
+        stage('maven-build'){
+            steps{
+                dir('backend'){
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+            post{
+                success{
+                    archiveArtifacts artifacts: 'backend/target/*.jar' , fingerprint: true
+                }
+            }
+        }
     }
 }
