@@ -1,0 +1,96 @@
+pipeline {
+    agent {
+        label "worker"
+    }
+
+    tools{
+        maven 'maven'
+    }
+
+    environment{
+        MY_AWS_CRED = credentials('aws-cred')
+        ECR_REPO = '419819289041.dkr.ecr.us-west-2.amazonaws.com/backend'
+    }
+
+    stages{
+        stage('Checkout'){
+            steps{
+                git branch: 'main', url: 'https://github.com/mayurpandit25/EasyCRUD.git'
+            }
+        }
+
+        stage('Build-Backend'){
+            steps{
+                dir('backend'){
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+            post{
+                success{
+                    archiveArtifacts artifacts: 'backend/target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        stage('Artifacts to S3'){
+            steps{
+                sh 'aws s3 cp backend/target/*.jar s3://mayurcbz.spaceee/Artifacts/'
+            }
+        }
+
+        stage('SonarQube Analysis'){
+            steps{
+               dir('backend'){
+                  withSonarQubeEnv('sonar'){
+                    sh 'mvn sonar:sonar'
+                  }
+               }
+            }
+        }
+
+        stage('Quality Gates'){
+            steps{
+                timeout(time: 5, unit: 'MINUTES'){
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Docker Build'){
+            steps{
+                dir('backend'){
+                    sh '''
+                        docker build -t backend:${BUILD_NUMBER} .
+                        docker images
+                    '''
+                }
+            }
+        }
+
+        stage('Approval'){
+            steps{
+                timeout(time: 30, unit: 'MINUTES'){
+                    input message: 'Approve deployment to Kubernetes?', ok: 'Approve'
+                }
+            }
+        }
+
+        stage('Push Image to ECR'){
+            steps{
+                sh '''
+                    aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 419819289041.dkr.ecr.us-west-2.amazonaws.com
+                    docker tag backend:${BUILD_NUMBER} ${ECR_REPO}:${BUILD_NUMBER}
+                    docker push ${ECR_REPO}:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Image Update'){
+            steps{
+                sh '''
+                    sed -i "s|image: .*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/backend/backend-deployment.yaml
+                '''
+            }
+        }
+    }
+}
