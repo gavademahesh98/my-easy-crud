@@ -110,7 +110,7 @@ pipeline{
                 sed -i "s|image:.*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/backend/backend_deployment.yaml
                 git add k8s/backend/backend_deployment.yaml
                 git commit -m "changed backend image tag ${ECR_REPO}:${BUILD_NUMBER}" || true 
-                https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/gavademahesh98/my-easy-crud.git HEAD:main
+                git push https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/gavademahesh98/my-easy-crud.git HEAD:main
                 
                 '''
                }
