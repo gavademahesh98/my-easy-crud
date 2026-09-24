@@ -7,6 +7,7 @@ pipeline{
     }
     environment{
         aws_cred=credentials('aws-cred')
+        ECR_REPO='655887417250.dkr.ecr.ap-southeast-1.amazonaws.com/easy-crud-backend'
     }
     stages{
         stage('backend-checkout'){
@@ -84,6 +85,15 @@ pipeline{
                     sh 'docker build --no-cache -t easy-crud-backend:${BUILD_NUMBER} .'
                     sh 'docker images'
                 }
+            }
+        }
+        stage('ecr-push'){
+            steps{
+                sh '''
+                aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 655887417250.dkr.ecr.ap-southeast-1.amazonaws.com
+                docker tag easy-crud-backend:${BUILD_NUMBER} ${ECR_REPO}:${BULD_NUMBER}
+                docker push ${ECR_REPO}:${BULD_NUMBER}
+                '''
             }
         }
     }
