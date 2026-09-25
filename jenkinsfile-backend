@@ -1,0 +1,89 @@
+pipeline{
+    agent{
+        label 'worker1'
+    }
+    tools{
+        maven 'mvn'
+    }
+    environment{
+        aws_cred=credentials('aws-cred')
+        IMAGE='655887417250.dkr.ecr.ap-southeast-1.amazonaws.com/backend-service'
+    }
+    stages{
+        stage('backend-checkout'){
+            steps{
+                git branch: 'main' , url: 'https://github.com/gavademahesh98/my-easy-crud.git'
+            }
+        }
+        stage('maven-build'){
+            steps{
+               dir('backend'){
+                sh 'mvn clean package -DskipTests'
+               } 
+            }
+            post{
+                success{
+                    archiveArtifacts artifacts: 'backend/target/*.jar' , fingerprint: true
+                }
+            }
+        }
+        stage('sonar-scan'){
+            steps{
+                dir('backend'){
+                    withSonarQubeEnv('sonar-server'){
+                        sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+        stage('Quality-gate'){
+            steps{
+                timeout(time:5 , unit: 'MINUTES'){
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        stage('push-to-s3'){
+            steps{
+                sh 'aws s3 cp backend/target/*.jar s3://backend-service-mvn-artifacts/'
+            }
+        }
+        stage('docker-build'){
+            steps{
+                dir('backend'){
+                    sh "docker build --no-cache -t backend-service:${BUILD_NUMBER} ."
+                    sh 'docker images'
+                }
+            }
+        }
+        stage('push-to-ECR'){
+            steps{
+                sh """
+                    aws ecr get-login-password --region ap-southeast-1 \
+                        | docker login --username AWS --password-stdin \
+                        655887417250.dkr.ecr.ap-southeast-1.amazonaws.com
+                    docker tag backend-service:${BUILD_NUMBER} ${IMAGE}:${BUILD_NUMBER}
+                    docker push ${IMAGE}:${BUILD_NUMBER}
+                    """
+                }
+        }
+        stage('update-deployment-image'){
+            steps{
+                sh 'sed -i "s|image:.*|image: $IMAGE:$BUILD_NUMBER|" k8s/backend/backend-deployment.yaml'
+                withCredentials([
+            usernamePassword(
+                credentialsId: 'github-cred',
+                usernameVariable: 'GIT_USERNAME',
+                passwordVariable: 'GIT_TOKEN'
+            )
+        ]) {
+            sh '''
+            git add k8s/backend/backend-deployment.yaml
+            git commit -m "Change deployment image tag to $BUILD_NUMBER"
+            git push https://$GIT_USERNAME:$GIT_TOKEN@github.com/gavademahesh98/my-easy-crud.git HEAD:main
+            '''
+        }
+            }
+        }
+    }
+}
