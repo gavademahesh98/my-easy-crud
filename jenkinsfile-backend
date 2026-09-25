@@ -27,6 +27,20 @@ pipeline{
                 }
             }
         }
+        stage('OWASP Dependency check'){
+            steps{
+                dir('backend'){
+                    dependencyCheck(
+                    odcInstallation: 'dependency-check',
+                    nvdCredentialsId: 'nvd-api-key',
+                    additionalArguments: '--scan . --format XML --format HTML --out dependency-check-report'
+                    )
+                    dependencyCheckPublisher(
+                pattern: 'dependency-check-report/dependency-check-report.xml'
+                    )
+                }
+            }
+        }
         stage('sonar-scan'){
             steps{
                 dir('backend'){
