@@ -75,15 +75,16 @@ pipeline{
             steps {
 
                 sh """
-                    TMPDIR=/var/lib/trivy-tmp trivy image \
-                        --cache-dir /var/lib/trivy-cache \
-                        --scanners vuln \
-                        --severity HIGH,CRITICAL \
-                        --ignore-unfixed \
-                        --format table \
-                        --output trivy-report.txt \
-                        backend-service:${BUILD_NUMBER}
-                """    
+                        TMPDIR=/var/lib/trivy-tmp trivy image \
+                            --cache-dir /var/lib/trivy-cache \
+                            --scanners vuln \
+                            --severity HIGH,CRITICAL \
+                            --ignore-unfixed \
+                            --format table \
+                            backend-service:${BUILD_NUMBER} \
+                            | iconv -f UTF-8 -t ASCII//TRANSLIT \
+                            > trivy-report.txt
+                    """
 
                 sh """
                     TMPDIR=/var/lib/trivy-tmp trivy image \
