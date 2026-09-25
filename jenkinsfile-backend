@@ -79,7 +79,7 @@ pipeline{
                     --ignore-unfixed \
                     --format table \
                     --output trivy-report.txt \
-                    student-management:${BUILD_NUMBER}
+                    backend-service:${BUILD_NUMBER}
                 """
 
                   archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
@@ -89,7 +89,7 @@ pipeline{
                     --severity HIGH,CRITICAL \
                     --ignore-unfixed \
                     --exit-code 1 \
-                    student-management:${BUILD_NUMBER}
+                    backend-service:${BUILD_NUMBER}
                 """
             }
         }
