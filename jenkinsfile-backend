@@ -29,17 +29,17 @@ pipeline{
         }
         stage('OWASP Dependency check'){
             steps{
+                sh 'mkdir -p dependency-check-report'
                 dir('backend'){
-                    sh 'mkdir dependency-check-report'
                     dependencyCheck(
                     odcInstallation: 'dependency-check',
                     nvdCredentialsId: 'nvd-api-key',
-                    additionalArguments: '--scan . --format XML --format HTML --out dependency-check-report'
+                    additionalArguments: '--scan . --format XML --format HTML --out ../dependency-check-report'
                     )
+                 }
                     dependencyCheckPublisher(
-                pattern: 'dependency-check-report/dependency-check-report.xml'
+                         pattern: 'dependency-check-report/dependency-check-report.xml'
                     )
-                }
             }
         }
         stage('sonar-scan'){
