@@ -71,6 +71,28 @@ pipeline{
                 }
             }
         }
+        stage('Trivy Scan') {
+            steps {
+                sh """
+                    trivy image \
+                    --severity HIGH,CRITICAL \
+                    --ignore-unfixed \
+                    --format table \
+                    --output trivy-report.txt \
+                    student-management:${BUILD_NUMBER}
+                """
+
+                  archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
+
+                sh """
+                    trivy image \
+                    --severity HIGH,CRITICAL \
+                    --ignore-unfixed \
+                    --exit-code 1 \
+                    student-management:${BUILD_NUMBER}
+                """
+            }
+        }
         stage('push-to-ECR'){
             steps{
                 sh """
@@ -80,7 +102,7 @@ pipeline{
                     docker tag backend-service:${BUILD_NUMBER} ${IMAGE}:${BUILD_NUMBER}
                     docker push ${IMAGE}:${BUILD_NUMBER}
                     """
-                }
+            }
         }
         stage('update-deployment-image'){
             steps{
