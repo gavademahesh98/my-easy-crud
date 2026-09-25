@@ -73,23 +73,29 @@ pipeline{
         }
         stage('Trivy Scan') {
             steps {
+
                 sh """
-                    trivy image \
-                    --severity HIGH,CRITICAL \
-                    --ignore-unfixed \
-                    --format table \
-                    --output trivy-report.txt \
-                    backend-service:${BUILD_NUMBER}
+                    TMPDIR=/var/lib/trivy-tmp trivy image \
+                        --cache-dir /var/lib/trivy-cache \
+                        --scanners vuln \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --format table \
+                        --output trivy-report.txt \
+                        backend-service:${BUILD_NUMBER}
                 """
 
-                  archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
+                        archiveArtifacts artifacts: 'trivy-report.txt',
+                        fingerprint: true
 
                 sh """
-                    trivy image \
-                    --severity HIGH,CRITICAL \
-                    --ignore-unfixed \
-                    --exit-code 1 \
-                    backend-service:${BUILD_NUMBER}
+                    TMPDIR=/var/lib/trivy-tmp trivy image \
+                        --cache-dir /var/lib/trivy-cache \
+                        --scanners vuln \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        backend-service:${BUILD_NUMBER}
                 """
             }
         }
