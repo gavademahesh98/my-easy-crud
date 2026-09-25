@@ -30,6 +30,7 @@ pipeline{
         stage('OWASP Dependency check'){
             steps{
                 dir('backend'){
+                    sh 'mkdir dependency-check-report'
                     dependencyCheck(
                     odcInstallation: 'dependency-check',
                     nvdCredentialsId: 'nvd-api-key',
