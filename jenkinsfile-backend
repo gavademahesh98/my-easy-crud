@@ -74,6 +74,7 @@ pipeline{
         stage('Trivy Scan') {
             steps {
 
+                // Generate report
                 sh """
                     TMPDIR=/var/lib/trivy-tmp trivy image \
                         --cache-dir /var/lib/trivy-cache \
@@ -83,25 +84,39 @@ pipeline{
                         --format table \
                         --output trivy-report.txt \
                         backend-service:${BUILD_NUMBER}
-                """    
-
-                sh """
-                    TMPDIR=/var/lib/trivy-tmp trivy image \
-                        --cache-dir /var/lib/trivy-cache \
-                        --scanners vuln \
-                        --severity HIGH,CRITICAL \
-                        --ignore-unfixed \
-                        --exit-code 1 \
-                        backend-service:${BUILD_NUMBER}
                 """
-            }
-            post{
-                always{
-                    archiveArtifacts artifacts: 'trivy-report.txt',
-                        fingerprint: true
-                }
-            }
+
+        // Verify report exists
+                    sh """
+                        echo "===== TRIVY REPORT ====="
+                        pwd
+                        ls -lh trivy-report.txt
+                        echo "========================"
+                    """
+
+        // Security gate
+                    sh """
+                        TMPDIR=/var/lib/trivy-tmp trivy image \
+                            --cache-dir /var/lib/trivy-cache \
+                            --scanners vuln \
+                            --severity HIGH,CRITICAL \
+                            --ignore-unfixed \
+                            --exit-code 1 \
+                            backend-service:${BUILD_NUMBER}
+                    """
+    }
+
+    post {
+        always {
+            echo "===== ARCHIVING TRIVY REPORT ====="
+            archiveArtifacts(
+                artifacts: 'trivy-report.txt',
+                fingerprint: true,
+                allowEmptyArchive: false
+            )
         }
+    }
+}
         stage('push-to-ECR'){
             steps{
                 sh """
