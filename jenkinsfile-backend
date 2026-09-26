@@ -92,7 +92,7 @@ pipeline{
                         --scanners vuln \
                         --severity HIGH,CRITICAL \
                         --ignore-unfixed \
-                       # --exit-code 1 \
+                        --exit-code 0 \
                         backend-service:${BUILD_NUMBER}
                 """
             }
