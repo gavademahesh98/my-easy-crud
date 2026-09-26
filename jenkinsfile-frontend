@@ -5,6 +5,7 @@ pipeline{
     tools{
         nodejs 'nodejs'
         maven 'mvn'
+        sonarQube 'sonar-scanner'
     }
     environment{
         aws_cred=credentials('aws-cred')
@@ -34,7 +35,7 @@ pipeline{
             steps{
                 dir('frontend'){
                     withSonarQubeEnv('sonar-server'){
-                        sh 'mvn sonar:sonar'
+                        sh 'sonar-scanner'
                     }
                 }
             }
