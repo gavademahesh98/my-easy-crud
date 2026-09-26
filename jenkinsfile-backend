@@ -90,7 +90,7 @@ pipeline{
                     TMPDIR=/var/lib/trivy-tmp trivy image \
                         --cache-dir /var/lib/trivy-cache \
                         --scanners vuln \
-                        --severity HIGH,CRITICAL \ 
+                        --severity HIGH,CRITICAL \
                         --ignore-unfixed \
                        # --exit-code 1 \
                         backend-service:${BUILD_NUMBER}
