@@ -5,7 +5,6 @@ pipeline{
     tools{
         nodejs 'nodejs'
         maven 'mvn'
-        sonarRunner 'sonar-scanner'
     }
     environment{
         aws_cred=credentials('aws-cred')
