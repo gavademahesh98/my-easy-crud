@@ -1,0 +1,33 @@
+pipeline{
+    agent{
+        label 'worker1'
+    }
+    tools{
+        nodejs 'nodejs'
+    }
+    environment{
+        aws_cred=credentials('aws-cred')
+    }
+    stages{
+        stage('frontend-checkout'){
+            steps{
+                git branch: 'main' , url: 'https://github.com/gavademahesh98/my-easy-crud.git'
+            }
+        }
+        stage('build-frontend'){
+            steps{
+                dir('frontend'){
+                    sh '''
+                    npm install 
+                    npm run build
+                    '''
+                }
+            }
+            post{
+                success{
+                    archiveArtifacts artifacts: 'frontend/dist/*', fingerprint: true
+                }
+            }
+        }
+    }
+}
