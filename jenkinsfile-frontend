@@ -30,15 +30,17 @@ pipeline{
                 }
             }
         }
-        stage('sonar-scan'){
-            steps{
-                dir('frontend'){
-                    withSonarQubeEnv('sonar-server'){
-                        sh 'sonar-scanner'
+        stage('sonar-scan') {
+             steps {
+                  dir('frontend') {
+                      withSonarQubeEnv('sonar-server') {
+                      def scannerHome = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+
+                      sh "${scannerHome}/bin/sonar-scanner"
+                      }
                     }
-                }
             }
-        }
+}
         stage('Quality-gate'){
             steps{
                 timeout(time:5 , unit: 'MINUTES'){
