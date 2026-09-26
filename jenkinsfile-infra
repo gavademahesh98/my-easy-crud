@@ -1,0 +1,39 @@
+pipeline{
+    agent{
+        label 'worker1'
+    }
+    tools{
+        terraform 'tf'
+    }
+    environment{
+            aws_cred=credentials('aws-cred')
+    }
+    stages{
+       stage('checkout'){
+          steps{
+            git branch: 'main', url: 'https://github.com/gavademahesh98/my-easy-crud.git'
+          }
+       }
+       stage('terraform-init'){
+        steps{
+            sh 'terraform init'
+        }
+       }
+       stage('terraform-validate'){
+            steps{
+                sh 'terraform validate'
+            }
+       }
+       stage('terraform-apply'){
+          steps{
+            sh 'terraform apply --auto-approve'
+          }
+       }
+      /* stage('terraform-destroy'){
+        steps{
+            sh  'terraform destroy'
+        }
+       }*/
+    }
+
+}
