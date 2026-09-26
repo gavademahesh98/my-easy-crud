@@ -1,17 +1,23 @@
-// tf file for eks cluster
-
 terraform {
   required_version = ">= 1.3"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "6.26.0"
     }
   }
+
+  backend "s3" {
+    bucket       = "terraform-state-manage-dev"
+    key          = "terraform/terraform.tfstate"
+    region       = "ap-southeast-1"
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
-  region = "us-west-2"
+  region = "ap-southeast-1"
 }
 
 data "aws_vpc" "default" { // Fetch default VPC
@@ -20,7 +26,7 @@ data "aws_vpc" "default" { // Fetch default VPC
 
 variable "cluster_name" { // Variable for cluster name
   type    = string
-  default = "my-eks-cluster1"
+  default = "dev-cluster"
 }
 
 data "aws_subnets" "default" { // Fetch  all subnets in the default VPC
