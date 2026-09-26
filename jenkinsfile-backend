@@ -129,8 +129,23 @@ pipeline{
             git commit -m "Change deployment image tag to $BUILD_NUMBER"
             git push https://$GIT_USERNAME:$GIT_TOKEN@github.com/gavademahesh98/my-easy-crud.git HEAD:main
             '''
-        }
+           }
             }
         }
+        stage('update-argo-CD'){
+            steps{
+                dir('argocd'){
+                sh '''
+                    aws eks update-kubeconfig --region ap-southeast-1 --name dev-cluster
+                    kubectl apply -f backend-application.yaml
+                    kubectl get app -n argocd
+                    sleep 10
+                    kubectl get pods
+                    kubectl get svc -o wide
+                '''
+                }
+               }
+        }
+
     }
 }

@@ -9,7 +9,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/mayurpandit25/EasyCRUD.git
+    repoURL: https://github.com/gavademahesh98/my-easy-crud.git
     targetRevision: main
     path: k8s/backend
 
