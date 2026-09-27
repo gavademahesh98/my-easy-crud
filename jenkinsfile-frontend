@@ -80,12 +80,12 @@ pipeline{
         }
         stage('Image-push-to-github'){
             steps{
-                usernamePassword(
+                usernamePassword([(
                 credentialsId: 'github-cred',
                 usernameVariable: 'GIT_USERNAME',
                 passwordVariable: 'GIT_TOKEN'
             )
-        ]) {
+          ]) {
             sh """
              git config  user.name "maheshgavade"
              git config user.email "gavademahesh98@gmail.com"
