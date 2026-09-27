@@ -8,6 +8,7 @@ pipeline{
     }
     environment{
         aws_cred=credentials('aws-cred')
+        FRONTEND_REPO='655887417250.dkr.ecr.ap-southeast-1.amazonaws.com/frontend-service'
     }
     stages{
         stage('frontend-checkout'){
@@ -55,6 +56,29 @@ pipeline{
                 sh 'aws s3 sync frontend/dist/ s3://frontend-service-artifacts/'
             }
         }
+        stage('docker-build'){
+            steps{
+                dir('frontend'){
+                sh "docker build --no-cache -t frontend-service:${BUILD_NUMBER} . "
+                }
+            }
+        }
+        stage('push image to ECR'){
+            steps{
+                sh """
+                aws ecr get-login-password --region ap-southeast-1 | \
+                docker login --username AWS --password-stdin 655887417250.dkr.ecr.ap-southeast-1.amazonaws.com
+                docker tag frontend-service:${BUILD_NUMBER} ${FRONTEND_REPO}:${BUILD_NUMBER}
+                docker push ${FRONTEND_REPO}:${BUILD_NUMBER}
+                """
+            }
+        }
+        stage('image-Update-frontend-deployment'){
+            steps{
+                sh "sed -i "s|image:.*|image: ${FRONTEND_REPO}:${BUILD_NUMBER}" k8s/frontend/frontend-deployment.yaml"
+            }
+        }
         
+
     }
 }
