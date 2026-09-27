@@ -75,7 +75,7 @@ pipeline{
         }
         stage('image-Update-frontend-deployment'){
             steps{
-                sh "sed -i "s|image:.*|image: ${FRONTEND_REPO}:${BUILD_NUMBER}|" k8s/frontend/frontend-deployment.yaml"
+                sh 'sed -i "s|image:.*|image: ${FRONTEND_REPO}:${BUILD_NUMBER}|" k8s/frontend/frontend-deployment.yaml'
             }
         }
         stage('Image-push-to-github'){
