@@ -1,16 +1,33 @@
-FROM node:24-alpine
+# =========================
+# Build Stage
+# =========================
+FROM node:24-alpine AS build
 
-COPY . /opt/
-WORKDIR /opt
+WORKDIR /app
+
+COPY package*.json ./
 
 RUN npm install
+
+COPY . .
+
 RUN npm run build
 
-RUN apk add --no-cache apache2
 
-RUN rm -rf /var/www/localhost/htdocs/*
-RUN cp -r dist/* /var/www/localhost/htdocs/
+# =========================
+# Runtime Stage
+# =========================
+FROM nginx:alpine
+
+# Remove default NGINX website
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy React/Vite build
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy custom NGINX configuration
+COPY nginx-router.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["httpd","-D","FOREGROUND"]
+CMD ["nginx", "-g", "daemon off;"]
