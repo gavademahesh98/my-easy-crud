@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/gavademahesh98/my-easy-crud.git
     targetRevision: main
-    path: k8s/
+    path: k8s/ingress
 
   destination:
     server: https://kubernetes.default.svc
