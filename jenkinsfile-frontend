@@ -78,7 +78,38 @@ pipeline{
                 sh "sed -i "s|image:.*|image: ${FRONTEND_REPO}:${BUILD_NUMBER}" k8s/frontend/frontend-deployment.yaml"
             }
         }
-        
+        stage('Image-push-to-github'){
+            steps{
+                usernamePassword(
+                credentialsId: 'github-cred',
+                usernameVariable: 'GIT_USERNAME',
+                passwordVariable: 'GIT_TOKEN'
+            )
+        ]) {
+            sh """
+             git config  user.name "maheshgavade"
+             git config user.email "gavademahesh98@gmail.com"
+            git add k8s/frontend/frontend-deployment.yaml
+            git commit -m "Change frontend deployment image tag to ${BUILD_NUMBER}"
+            git push https://$GIT_USERNAME:$GIT_TOKEN@github.com/gavademahesh98/my-easy-crud.git HEAD:main
+            """
+           }
+            }
+        }
+        stage('argocd-deployment'){
+            steps{
+                sh """
+                aws eks update-kubeconfig --region ap-southeast-1 ---name dev-cluster
+                kubectl apply -f argocd/frontend-application.yaml
+                kubectl apply -f argocd/ingress-application.yaml
+                kubectl get app -n argocd
+                sleep 10
+                kubectl get pods 
+                kubectl get svc -o wide
+                """
+            }
+        }
+
 
     }
 }
