@@ -19,7 +19,7 @@ spec:
   ingressClassName: alb
 
   rules:
-    - host: alb.cloudking.fun
+    - host: cloudking.fun
 
       http:
         paths:
